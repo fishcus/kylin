@@ -337,18 +337,27 @@ public class QueryService extends BasicService {
 
         // if Cuboid Ids is empty, get value from SQLResponse.
         if (cuboidIds.isEmpty()) {
-            List<QueryContext.CubeSegmentStatisticsResult> cubeSegmentStatisticsList =
-                    response.getCubeSegmentStatisticsList();
-            if (CollectionUtils.isNotEmpty(cubeSegmentStatisticsList)) {
-                cubeSegmentStatisticsList.forEach(cubeSegmentStatResult -> {
-                    if (MapUtils.isNotEmpty(cubeSegmentStatResult.getCubeSegmentStatisticsMap())) {
-                        cubeSegmentStatResult.getCubeSegmentStatisticsMap().values().forEach(cubeSegmentStatMap -> {
-                            cubeSegmentStatMap.values().forEach(cubeSegmentStat -> {
-                                cuboidIds.add(cubeSegmentStat.getTargetCuboidId());
-                            });
-                        });
+            if (storageCacheUsed) {
+                String responseCuboidIds = response.getCuboidIds();
+                if (StringUtils.isNotBlank(responseCuboidIds)) {
+                    for (String cuboidId : responseCuboidIds.split(",")) {
+                        cuboidIds.add(Long.valueOf(cuboidId));
                     }
-                });
+                }
+            } else {
+                List<QueryContext.CubeSegmentStatisticsResult> cubeSegmentStatisticsList =
+                        response.getCubeSegmentStatisticsList();
+                if (CollectionUtils.isNotEmpty(cubeSegmentStatisticsList)) {
+                    cubeSegmentStatisticsList.forEach(cubeSegmentStatResult -> {
+                        if (MapUtils.isNotEmpty(cubeSegmentStatResult.getCubeSegmentStatisticsMap())) {
+                            cubeSegmentStatResult.getCubeSegmentStatisticsMap().values().forEach(cubeSegmentStatMap -> {
+                                cubeSegmentStatMap.values().forEach(cubeSegmentStat -> {
+                                    cuboidIds.add(cubeSegmentStat.getTargetCuboidId());
+                                });
+                            });
+                        }
+                    });
+                }
             }
         }
 
